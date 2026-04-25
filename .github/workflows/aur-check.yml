@@ -25,7 +25,6 @@ jobs:
     name: Check and verify (${{ matrix.package.name }})
     runs-on: aur-runners
     needs: discover-packages
-    if: ${{ matrix.package.enabled != false }}
     strategy:
       fail-fast: false
       matrix:
