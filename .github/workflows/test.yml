@@ -1,12 +1,15 @@
 name: test-runner
-
 on:
   workflow_dispatch:
-
 jobs:
   dagger-version:
-    name: Dagger version
+    name: Dagger Debug
     runs-on: aur-runners
     steps:
-      - name: Show dagger version
-        run: dagger version
+      - name: debug
+        env:
+          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+        run: |
+          dagger version
+          dagger core engine name
+          dagger core engine local-cache
