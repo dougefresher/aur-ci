@@ -1,0 +1,54 @@
+name: aur-check
+on:
+  workflow_dispatch:
+
+jobs:
+  discover-packages:
+    name: Discover packages
+    runs-on: aur-runners
+    outputs:
+      packages: ${{ steps.packages.outputs.packages }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Export packages matrix JSON
+        id: packages
+        shell: bash
+        run: |
+          {
+            echo 'packages<<EOF'
+            cat packages.json
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+  check-and-verify:
+    name: Check and verify (${{ matrix.package.name }})
+    runs-on: aur-runners
+    needs: discover-packages
+    if: ${{ matrix.package.enabled != false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.discover-packages.outputs.packages) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Dagger CLI availability
+        run: dagger version
+
+      - name: Check upstream and verify PKGBUILD sources
+        env:
+          PKGNAME: ${{ matrix.package.name }}
+          NVCHECKER_NAME: ${{ matrix.package.nvcheckerName || '' }}
+        shell: bash
+        run: |
+          args=(check-and-verify-package --pkgname="$PKGNAME")
+
+          if [[ -n "$NVCHECKER_NAME" ]]; then
+            args+=(--nvchecker-name="$NVCHECKER_NAME")
+          fi
+
+          dagger call "${args[@]}"

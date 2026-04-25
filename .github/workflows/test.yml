@@ -1,0 +1,12 @@
+name: test-runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dagger-version:
+    name: Dagger version
+    runs-on: aur-runners
+    steps:
+      - name: Show dagger version
+        run: dagger version
