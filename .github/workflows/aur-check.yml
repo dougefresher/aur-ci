@@ -11,7 +11,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Export packages matrix JSON
         id: packages
         shell: bash
@@ -35,14 +34,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Check Dagger CLI availability
         run: dagger version
-
       - name: Check upstream and verify PKGBUILD sources
         env:
           PKGNAME: ${{ matrix.package.name }}
           NVCHECKER_NAME: ${{ matrix.package.nvcheckerName || '' }}
+          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
         shell: bash
         run: |
           args=(check-and-verify-package --pkgname="$PKGNAME")
