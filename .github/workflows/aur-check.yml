@@ -10,7 +10,7 @@ jobs:
       packages: ${{ steps.packages.outputs.packages }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Export packages matrix JSON
         id: packages
         shell: bash
@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Check Dagger CLI availability
         run: dagger version
       - name: Check upstream and verify PKGBUILD sources
