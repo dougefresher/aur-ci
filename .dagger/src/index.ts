@@ -1,4 +1,4 @@
-import { argument, Container, dag, File, func, object } from "@dagger.io/dagger"
+import { argument, Container, dag, File, func, object, Socket } from "@dagger.io/dagger"
 
 type NvcheckerEvent = {
   event?: string
@@ -84,8 +84,9 @@ export class AurCi {
     baseImage = "ghcr.io/carteramesh/docker/aur-builder:latest",
     aurBaseUrl = "ssh://aur@aur.archlinux.org",
     nvcheckerName?: string,
+    sock?: Socket,
   ): Promise<string> {
-    const check = await this.runCheck(pkgname, baseImage, aurBaseUrl, nvcheckerName)
+    const check = await this.runCheck(pkgname, baseImage, aurBaseUrl, nvcheckerName, sock)
 
     return JSON.stringify(
       {
@@ -105,8 +106,9 @@ export class AurCi {
     pkgname: string,
     baseImage = "ghcr.io/carteramesh/docker/aur-builder:latest",
     aurBaseUrl = "ssh://aur@aur.archlinux.org",
+    sock?: Socket,
   ): Promise<string> {
-    const cloned = this.cloneAurRepo(pkgname, baseImage, aurBaseUrl)
+    const cloned = this.cloneAurRepo(pkgname, baseImage, aurBaseUrl, sock)
     await this.runMakepkgVerify(cloned.container, cloned.repoDir)
 
     return JSON.stringify(
@@ -135,8 +137,9 @@ export class AurCi {
     baseImage = "ghcr.io/carteramesh/docker/aur-builder:latest",
     aurBaseUrl = "ssh://aur@aur.archlinux.org",
     nvcheckerName?: string,
+    sock?: Socket,
   ): Promise<string> {
-    const cloned = this.cloneAurRepo(pkgname, baseImage, aurBaseUrl)
+    const cloned = this.cloneAurRepo(pkgname, baseImage, aurBaseUrl, sock)
     const pkgRef = nvcheckerName?.trim() || pkgname
     const check = await this.collectCheckResult(cloned, pkgname, pkgRef)
 
@@ -172,21 +175,23 @@ export class AurCi {
     baseImage: string,
     aurBaseUrl: string,
     nvcheckerName?: string,
+    sock?: Socket,
   ): Promise<CheckResult> {
-    const cloned = this.cloneAurRepo(pkgname, baseImage, aurBaseUrl)
+    const cloned = this.cloneAurRepo(pkgname, baseImage, aurBaseUrl, sock)
     const pkgRef = nvcheckerName?.trim() || pkgname
 
     return this.collectCheckResult(cloned, pkgname, pkgRef)
   }
 
-  private cloneAurRepo(pkgname: string, baseImage: string, aurBaseUrl: string): ClonedRepo {
+  private cloneAurRepo(pkgname: string, baseImage: string, aurBaseUrl: string, sock?: Socket): ClonedRepo {
     const normalizedAurBase = aurBaseUrl.replace(/\/+$/, "")
     const repoUrl = `${normalizedAurBase}/${pkgname}.git`
     const repoDir = "/home/aur_builder/repo"
-    const container = dag
-      .container()
-      .from(baseImage)
-      .withExec(["git", "clone", "--depth", "1", repoUrl, repoDir])
+    const repoTree = sock
+      ? dag.git(repoUrl, { sshAuthSocket: sock }).head().tree()
+      : dag.git(repoUrl).head().tree()
+    const container = dag.container().from(baseImage).withDirectory(repoDir, repoTree)
+
     return {
       repoUrl,
       repoDir,

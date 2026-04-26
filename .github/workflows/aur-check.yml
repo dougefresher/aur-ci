@@ -38,8 +38,18 @@ jobs:
       - name: Check upstream and verify PKGBUILD sources
         env:
           PKGNAME: ${{ matrix.package.name }}
+          NVCHECKER_NAME: ${{ matrix.package.nvcheckerName || '' }}
           DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
         shell: bash
         run: |
-          args=(check-and-verify-package --pkgname="$PKGNAME")
+          eval "$(ssh-agent -s)"
+          trap 'ssh-agent -k' EXIT
+          ssh-add /home/runner/.ssh/id_ed25519
+
+          args=(check-and-verify-package --pkgname="$PKGNAME" --sock="$SSH_AUTH_SOCK")
+
+          if [[ -n "$NVCHECKER_NAME" ]]; then
+            args+=(--nvchecker-name="$NVCHECKER_NAME")
+          fi
+
           dagger call "${args[@]}"
