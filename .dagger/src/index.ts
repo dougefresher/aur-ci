@@ -109,7 +109,7 @@ export class AurCi {
   /^pkgver=/ { print "pkgver=" v; next }
   /^pkgrel=/ { print "pkgrel=1"; next }
   { print }
-' PKGBUILD > /tmp/p"
+' PKGBUILD > /tmp/p
 mv /tmp/p PKGBUILD`;
     await container
       .withWorkdir(repoDir)
