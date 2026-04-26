@@ -35,6 +35,14 @@ jobs:
         uses: actions/checkout@v6
       - name: Check Dagger CLI availability
         run: dagger version
+      - name: Clone AUR package repository (HTTP)
+        env:
+          PKGNAME: ${{ matrix.package.name }}
+        shell: bash
+        run: |
+          mkdir -p .aur
+          git clone --depth 1 "https://aur.archlinux.org/${PKGNAME}.git" ".aur/${PKGNAME}"
+
       - name: Check upstream and verify PKGBUILD sources
         env:
           PKGNAME: ${{ matrix.package.name }}
@@ -42,11 +50,7 @@ jobs:
           DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
         shell: bash
         run: |
-          eval "$(ssh-agent -s)"
-          trap 'ssh-agent -k' EXIT
-          ssh-add /home/runner/.ssh/id_ed25519
-
-          args=(check-and-verify-package --pkgname="$PKGNAME" --sock="$SSH_AUTH_SOCK")
+          args=(check-and-verify-package --pkgname="$PKGNAME" --repo-dir=".aur/${PKGNAME}")
 
           if [[ -n "$NVCHECKER_NAME" ]]; then
             args+=(--nvchecker-name="$NVCHECKER_NAME")
