@@ -1,5 +1,14 @@
 [
   {
     "name": "pi-ext-powerline-footer"
+  },
+  {
+    "name": "pi-ext-subagents"
+  },
+  {
+    "name": "pi-ext-awsdocs"
+  },
+  {
+    "name": "pi-ext-cursor-rules"
   }
 ]
