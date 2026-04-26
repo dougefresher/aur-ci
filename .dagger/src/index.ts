@@ -29,35 +29,18 @@ export class AurCi {
     pkgname: string,
     repoDir: Directory,
     baseImage = 'ghcr.io/carteramesh/docker/aur-builder:latest',
-    nvcheckerName?: string,
-  ): Promise<string> {
+  ): Promise<Directory> {
     const workspace = this.prepareRepoWorkspace(baseImage, repoDir);
-    const pkgRef = nvcheckerName?.trim() || pkgname;
+    const pkgRef = pkgname;
     const check = await this.collectCheckResult(workspace, pkgname, pkgRef);
-    let verify: { status: 'passed' | 'skipped'; reason?: string; command?: string };
-    if (check.changed) {
-      await this.runMakepkgBuild(workspace.container, workspace.repoDir, check);
-      verify = {
-        status: 'passed',
-        command: 'source PKGBUILD && makepkg --verifysource && makepkg --force --cleanbuild --noconfirm',
-      };
-    } else {
-      verify = {
-        status: 'skipped',
-        reason: 'up-to-date',
-      };
+
+    if (!check.changed) {
+      // up-to-date; return the input unchanged
+      return repoDir;
     }
 
-    return JSON.stringify(
-      {
-        status: 'ok',
-        ...check,
-        verify,
-        processedAt: new Date().toISOString(),
-      },
-      null,
-      2,
-    );
+    const built = await this.runMakepkgBuild(workspace.container, workspace.repoDir, check);
+    return built.directory(workspace.repoDir);
   }
 
   private prepareRepoWorkspace(baseImage: string, repoDirInput: Directory): RepoWorkspace {
@@ -104,23 +87,27 @@ export class AurCi {
     };
   }
 
-  private async runMakepkgBuild(container: Container, repoDir: string, checkResult: CheckResult): Promise<void> {
+  private async runMakepkgBuild(
+    container: Container,
+    repoDir: string,
+    checkResult: CheckResult,
+  ): Promise<Container> {
     const pkgver_update = `awk -v v="${checkResult.latestVersion}" '
   /^pkgver=/ { print "pkgver=" v; next }
   /^pkgrel=/ { print "pkgrel=1"; next }
   { print }
 ' PKGBUILD > /tmp/p
 mv /tmp/p PKGBUILD`;
-    await container
+    return await container
       .withWorkdir(repoDir)
+      .withExec(['bash', '-lc', pkgver_update])
+      .withExec(['updpkgsums'])
+      .withExec(['bash', '-lc', 'makepkg --printsrcinfo >.SRCINFO'])
       .withExec([
         'bash',
         '-lc',
         'source PKGBUILD; makepkg --verifysource; echo makepkg --force --cleanbuild --noconfirm',
       ])
-      .withExec(['bash', '-lc', pkgver_update])
-      .withExec(['updpkgsums'])
-      .withExec(['bash', '-lc', 'makepkg --printsrcinfo >.SRCINFO'])
       .withExec(['namcap', 'PKGBUILD'])
       .sync();
   }
