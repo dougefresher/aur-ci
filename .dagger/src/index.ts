@@ -104,7 +104,7 @@ export class AurCi {
   async verifyPackage(
     pkgname: string,
     baseImage = "ghcr.io/carteramesh/docker/aur-builder:latest",
-    aurBaseUrl = "https://aur.archlinux.org",
+    aurBaseUrl = "ssh://aur@aur.archlinux.org",
   ): Promise<string> {
     const cloned = this.cloneAurRepo(pkgname, baseImage, aurBaseUrl)
     await this.runMakepkgVerify(cloned.container, cloned.repoDir)
@@ -167,7 +167,7 @@ export class AurCi {
     )
   }
 
-  private async runCheck(
+  private runCheck(
     pkgname: string,
     baseImage: string,
     aurBaseUrl: string,
@@ -183,12 +183,10 @@ export class AurCi {
     const normalizedAurBase = aurBaseUrl.replace(/\/+$/, "")
     const repoUrl = `${normalizedAurBase}/${pkgname}.git`
     const repoDir = "/home/aur_builder/repo"
-
     const container = dag
       .container()
       .from(baseImage)
       .withExec(["git", "clone", "--depth", "1", repoUrl, repoDir])
-
     return {
       repoUrl,
       repoDir,
