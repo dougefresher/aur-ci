@@ -39,7 +39,9 @@ jobs:
         shell: bash
         run: |
           mkdir -p .aur
-          ls -l .ssh/
+          echo $PWD
+          ls
+          ls -l .ssh
           git clone --depth 1 "ssh://aur@aur.archlinux.org/${PKGNAME}.git" ".aur/${PKGNAME}"
       - name: Check upstream and verify PKGBUILD sources
         id: dagger_check
