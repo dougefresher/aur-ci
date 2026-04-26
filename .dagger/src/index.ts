@@ -80,11 +80,9 @@ export class AurCi {
     const workspace = this.prepareRepoWorkspace(baseImage, repoDir);
     const pkgRef = nvcheckerName?.trim() || pkgname;
     const check = await this.collectCheckResult(workspace, pkgname, pkgRef);
-
     let verify: { status: 'passed' | 'skipped'; reason?: string; command?: string };
-
     if (check.changed) {
-      await this.runMakepkgBuild(workspace.container, workspace.repoDir);
+      await this.runMakepkgBuild(workspace.container, workspace.repoDir, check);
       verify = {
         status: 'passed',
         command: 'source PKGBUILD && makepkg --verifysource && makepkg --force --cleanbuild --noconfirm',
@@ -110,11 +108,7 @@ export class AurCi {
 
   private prepareRepoWorkspace(baseImage: string, repoDirInput: Directory): RepoWorkspace {
     const repoDir = '/home/aur_builder/repo';
-
-    const container = dag
-      .container()
-      .from(baseImage)
-      .withDirectory(repoDir, repoDirInput, { owner: '1001:1001' });
+    const container = dag.container().from(baseImage).withDirectory(repoDir, repoDirInput, { owner: '1001:1001' });
 
     return {
       repoDir,
@@ -156,7 +150,13 @@ export class AurCi {
     };
   }
 
-  private async runMakepkgBuild(container: Container, repoDir: string): Promise<void> {
+  private async runMakepkgBuild(container: Container, repoDir: string, checkResult: CheckResult): Promise<void> {
+    const pkgver_update = `awk -v v="${checkResult.latestVersion}" '
+  /^pkgver=/ { print "pkgver=" v; next }
+  /^pkgrel=/ { print "pkgrel=1"; next }
+  { print }
+' PKGBUILD > /tmp/p"
+mv /tmp/p PKGBUILD`;
     await container
       .withWorkdir(repoDir)
       .withExec([
@@ -164,6 +164,9 @@ export class AurCi {
         '-lc',
         'source PKGBUILD; makepkg --verifysource; echo makepkg --force --cleanbuild --noconfirm',
       ])
+      .withExec(['bash', 'lc', pkgver_update])
+      .withExec(['updpkgsums'])
+      .withExec(['bash', 'lc', 'makepkg --printsrcinfo >.SRCINFO'])
       .sync();
   }
 
