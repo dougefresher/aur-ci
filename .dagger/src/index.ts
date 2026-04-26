@@ -25,52 +25,6 @@ type RepoWorkspace = {
 @object()
 export class AurCi {
   @func()
-  async checkPackageChanged(
-    pkgname: string,
-    repoDir: Directory,
-    baseImage = 'ghcr.io/carteramesh/docker/aur-builder:latest',
-    nvcheckerName?: string,
-  ): Promise<string> {
-    const workspace = this.prepareRepoWorkspace(baseImage, repoDir);
-    const pkgRef = nvcheckerName?.trim() || pkgname;
-    const check = await this.collectCheckResult(workspace, pkgname, pkgRef);
-
-    return JSON.stringify(
-      {
-        status: 'ok',
-        ...check,
-      },
-      null,
-      2,
-    );
-  }
-
-  @func()
-  async verifyPackage(
-    pkgname: string,
-    repoDir: Directory,
-    baseImage = 'ghcr.io/carteramesh/docker/aur-builder:latest',
-  ): Promise<string> {
-    const workspace = this.prepareRepoWorkspace(baseImage, repoDir);
-    await this.runMakepkgBuild(workspace.container, workspace.repoDir);
-
-    return JSON.stringify(
-      {
-        status: 'ok',
-        pkgname,
-        repo: `workspace://${pkgname}`,
-        verify: {
-          status: 'passed',
-          command: 'source PKGBUILD && makepkg --verifysource && makepkg --force --cleanbuild --noconfirm',
-        },
-        verifiedAt: new Date().toISOString(),
-      },
-      null,
-      2,
-    );
-  }
-
-  @func()
   async checkAndVerifyPackage(
     pkgname: string,
     repoDir: Directory,
@@ -164,9 +118,10 @@ mv /tmp/p PKGBUILD`;
         '-lc',
         'source PKGBUILD; makepkg --verifysource; echo makepkg --force --cleanbuild --noconfirm',
       ])
-      .withExec(['bash', 'lc', pkgver_update])
+      .withExec(['bash', '-lc', pkgver_update])
       .withExec(['updpkgsums'])
-      .withExec(['bash', 'lc', 'makepkg --printsrcinfo >.SRCINFO'])
+      .withExec(['bash', '-lc', 'makepkg --printsrcinfo >.SRCINFO'])
+      .withExec(['namcap', 'PKGBUILD'])
       .sync();
   }
 
