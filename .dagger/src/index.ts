@@ -115,7 +115,7 @@ export class AurCi {
     const container = dag
       .container()
       .from(baseImage)
-      .withDirectory(sourceDir, repoDirInput)
+      .withDirectory(sourceDir, repoDirInput, { owner: '1001:1001' })
       .withExec([
         'bash',
         '-lc',
