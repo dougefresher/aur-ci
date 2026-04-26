@@ -33,16 +33,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Check Dagger CLI availability
-        run: dagger version
-      - name: Clone AUR package repository (HTTP)
+      - name: Clone AUR
         env:
           PKGNAME: ${{ matrix.package.name }}
         shell: bash
         run: |
           mkdir -p .aur
+          ls -l .ssh/
           git clone --depth 1 "ssh://aur@aur.archlinux.org/${PKGNAME}.git" ".aur/${PKGNAME}"
-
       - name: Check upstream and verify PKGBUILD sources
         id: dagger_check
         env:
