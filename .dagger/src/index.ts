@@ -110,17 +110,11 @@ export class AurCi {
 
   private prepareRepoWorkspace(baseImage: string, repoDirInput: Directory): RepoWorkspace {
     const repoDir = '/home/aur_builder/repo';
-    const sourceDir = '/home/aur_builder/repo-src';
 
     const container = dag
       .container()
       .from(baseImage)
-      .withDirectory(sourceDir, repoDirInput, { owner: '1001:1001' })
-      .withExec([
-        'bash',
-        '-lc',
-        `rm -rf '${repoDir}' && mkdir -p '${repoDir}' && cp -r '${sourceDir}/.' '${repoDir}/'`,
-      ]);
+      .withDirectory(repoDir, repoDirInput, { owner: '1001:1001' });
 
     return {
       repoDir,

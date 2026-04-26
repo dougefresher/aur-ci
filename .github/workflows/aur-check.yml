@@ -41,9 +41,10 @@ jobs:
         shell: bash
         run: |
           mkdir -p .aur
-          git clone --depth 1 "https://aur.archlinux.org/${PKGNAME}.git" ".aur/${PKGNAME}"
+          git clone --depth 1 "ssh://aur@aur.archlinux.org/${PKGNAME}.git" ".aur/${PKGNAME}"
 
       - name: Check upstream and verify PKGBUILD sources
+        id: dagger_check
         env:
           PKGNAME: ${{ matrix.package.name }}
           NVCHECKER_NAME: ${{ matrix.package.nvcheckerName || '' }}
@@ -55,5 +56,25 @@ jobs:
           if [[ -n "$NVCHECKER_NAME" ]]; then
             args+=(--nvchecker-name="$NVCHECKER_NAME")
           fi
+          dagger call "${args[@]}" | tee result.json
+          echo "changed=$(jq -r '.changed' result.json)" >> "$GITHUB_OUTPUT"
 
-          dagger call "${args[@]}"
+      - name: Commit and push when changed
+        if: ${{ steps.dagger_check.outputs.changed == 'true' }}
+        env:
+          PKGNAME: ${{ matrix.package.name }}
+        shell: bash
+        run: |
+          repo=".aur/${PKGNAME}"
+          cd "$repo"
+
+          if git diff --quiet -- PKGBUILD .SRCINFO; then
+            echo "Dagger reported changed=true, but PKGBUILD/.SRCINFO are unchanged. Skipping commit."
+            exit 0
+          fi
+
+          git config user.name "aur-builder"
+          git config user.email "aur-builder@bot.com"
+          git add PKGBUILD .SRCINFO
+          git commit -m "automated update"
+          git push origin HEAD
