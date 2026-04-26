@@ -82,7 +82,7 @@ export class AurCi {
   async checkPackageChanged(
     pkgname: string,
     baseImage = "ghcr.io/carteramesh/docker/aur-builder:latest",
-    aurBaseUrl = "https://aur.archlinux.org",
+    aurBaseUrl = "ssh://aur@aur.archlinux.org",
     nvcheckerName?: string,
   ): Promise<string> {
     const check = await this.runCheck(pkgname, baseImage, aurBaseUrl, nvcheckerName)
@@ -133,7 +133,7 @@ export class AurCi {
   async checkAndVerifyPackage(
     pkgname: string,
     baseImage = "ghcr.io/carteramesh/docker/aur-builder:latest",
-    aurBaseUrl = "https://aur.archlinux.org",
+    aurBaseUrl = "ssh://aur@aur.archlinux.org",
     nvcheckerName?: string,
   ): Promise<string> {
     const cloned = this.cloneAurRepo(pkgname, baseImage, aurBaseUrl)
