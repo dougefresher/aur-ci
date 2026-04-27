@@ -1,6 +1,8 @@
 name: aur-check
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "33 5 * * *"
 
 jobs:
   discover-packages:
