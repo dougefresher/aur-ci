@@ -1,0 +1,9 @@
+steps:
+  - label: ":arch: smoke aur-builder image"
+    agents:
+      queue: "default"
+    image: "ghcr.io/carteramesh/docker/aur-builder:latest"
+    commands:
+      - whoami
+      - nvchecker --version
+      - makepkg --version
