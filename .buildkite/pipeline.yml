@@ -3,11 +3,12 @@ steps:
     agents:
       queue: "default"
     image: "ghcr.io/carteramesh/docker/aur-builder:latest"
+    env:
+      AUR_PUSH_CHANGES: "1"
     plugins:
       - kubernetes:
           podTemplate: aur-builder
     commands:
       - export HOME=/home/aur_builder
-      - ls -l $HOME/aur_builder/.ssh/id_ed25519 || true
-      - echo export GIT_SSH_COMMAND='ssh -i /home/aur_builder/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes'
+      - ls -l "$HOME/.ssh/id_ed25519"
       - ./pkgbuild-update.sh

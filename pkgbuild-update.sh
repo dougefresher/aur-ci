@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
+PUSH_CHANGES="${AUR_PUSH_CHANGES:-0}"
+
 PACKAGES=(
   pi-ext-powerline-footer
   pi-ext-subagents
@@ -55,5 +58,17 @@ for pkg in "${PACKAGES[@]}"; do
     makepkg -s --nobuild
     namcap PKGBUILD
     nvtake -c .nvchecker.toml "$pkgname"
+
+    if [[ "$PUSH_CHANGES" == "1" || "$PUSH_CHANGES" == "true" || "$PUSH_CHANGES" == "yes" ]]; then
+      if git diff --quiet -- PKGBUILD .SRCINFO; then
+        echo "No commit needed for $pkgname"
+      else
+        git add PKGBUILD .SRCINFO
+        git commit -m "automated update: ${current_pkgver} -> ${latest_pkgver}"
+        git push origin HEAD
+      fi
+    else
+      echo "AUR_PUSH_CHANGES not enabled; skipping commit/push for $pkgname"
+    fi
   )
 done
