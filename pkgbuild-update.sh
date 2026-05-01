@@ -8,8 +8,15 @@ PACKAGES=(
   pi-ext-boomerang
   pi-ext-intercom
 )
-mkdir -p repos
-cd repos
+WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/aur-ci.XXXXXX")"
+if [[ "${KEEP_WORKDIR:-0}" != "1" ]]; then
+  trap 'rm -rf "$WORKDIR"' EXIT
+else
+  echo "KEEP_WORKDIR=1, preserving workspace: $WORKDIR"
+fi
+
+mkdir -p "$WORKDIR/repos"
+cd "$WORKDIR/repos"
 for pkg in "${PACKAGES[@]}"; do
   git clone "ssh://aur@aur.archlinux.org/${pkg}.git"
   (
