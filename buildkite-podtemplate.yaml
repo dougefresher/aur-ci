@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: PodTemplate
+metadata:
+  name: aur-builder
+  namespace: buildkite
+  labels:
+    app.kubernetes.io/name: buildkite-aur-builder
+    app.kubernetes.io/part-of: buildkite
+template:
+  spec:
+    containers:
+      - name: container-0
+        image: ghcr.io/carteramesh/docker/aur-builder:latest
+        imagePullPolicy: Always
+        env:
+          - name: HOME
+            value: /home/aur_builder
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: "1"
+            memory: 1Gi
+        volumeMounts:
+          - name: ssh-key
+            mountPath: /home/aur_builder/.ssh/id_ed25519
+            subPath: id_ed25519
+            readOnly: true
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      fsGroup: 1001
+    volumes:
+      - name: ssh-key
+        secret:
+          secretName: aur-ssh-key
+          defaultMode: 0600
+          optional: true

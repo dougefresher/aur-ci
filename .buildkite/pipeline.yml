@@ -5,6 +5,5 @@ steps:
     image: "ghcr.io/carteramesh/docker/aur-builder:latest"
     commands:
       - id
-      - echo $PWD
-      - ls -ld $PWD
+      - ls -l $HOME/.ssh/
       - ./pkgbuild-update.sh
