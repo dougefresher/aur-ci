@@ -4,4 +4,6 @@ steps:
       queue: "default"
     image: "ghcr.io/carteramesh/docker/aur-builder:latest"
     commands:
+      - echo $PWD
+      - ls -ld $PWD
       - ./pkgbuild-update.sh
