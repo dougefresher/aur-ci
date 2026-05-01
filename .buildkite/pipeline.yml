@@ -4,4 +4,5 @@ steps:
       queue: "default"
     image: "ghcr.io/carteramesh/docker/aur-builder:latest"
     commands:
-      - HOME=/home/aur_builder ./pkgbuild-update.sh
+      - export GIT_SSH_COMMAND='ssh -i /home/aur_builder/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes'
+      - ./pkgbuild-update.sh
