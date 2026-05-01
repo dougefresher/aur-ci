@@ -3,6 +3,8 @@ steps:
     agents:
       queue: "default"
     image: "ghcr.io/carteramesh/docker/aur-builder:latest"
+    env:
+      HOME: "/home/aur_builder"
     commands:
       - id
       - ls -l $HOME/.ssh/
