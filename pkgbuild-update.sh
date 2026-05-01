@@ -55,7 +55,8 @@ for pkg in "${PACKAGES[@]}"; do
 
     updpkgsums
     makepkg --printsrcinfo >.SRCINFO
-    makepkg -s --nobuild
+    # CI currently does metadata/lint updates only; full builds are deferred.
+    # Avoid `makepkg -s --nobuild` here because it can trigger interactive sudo.
     namcap PKGBUILD
     nvtake -c .nvchecker.toml "$pkgname"
 
@@ -63,7 +64,7 @@ for pkg in "${PACKAGES[@]}"; do
       if git diff --quiet -- PKGBUILD .SRCINFO; then
         echo "No commit needed for $pkgname"
       else
-        git add PKGBUILD .SRCINFO
+        git add PKGBUILD .SRCINFO oldver.json
         git commit -m "automated update: ${current_pkgver} -> ${latest_pkgver}"
         git push origin HEAD
       fi
