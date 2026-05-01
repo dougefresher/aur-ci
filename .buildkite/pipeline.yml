@@ -9,6 +9,5 @@ steps:
       - kubernetes:
           podTemplate: aur-builder
     commands:
-      - export HOME=/home/aur_builder
-      - ls -l "$HOME/.ssh/id_ed25519"
-      - ./pkgbuild-update.sh
+      - ls -l "/home/aur_builder/.ssh/id_ed25519"
+      - HOME=/home/aur_builder ./pkgbuild-update.sh
