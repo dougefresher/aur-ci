@@ -10,6 +10,7 @@ PACKAGES=(
   pi-ext-cursor-rules
   pi-ext-boomerang
   pi-ext-intercom
+  gmcli
 )
 WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/aur-ci.XXXXXX")"
 if [[ "${KEEP_WORKDIR:-0}" != "1" ]]; then
