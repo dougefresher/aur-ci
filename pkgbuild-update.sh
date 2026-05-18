@@ -10,6 +10,7 @@ PACKAGES=(
   pi-ext-cursor-rules
   pi-ext-boomerang
   pi-ext-intercom
+  pi-ext-usage
   gmcli
 )
 WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/aur-ci.XXXXXX")"
