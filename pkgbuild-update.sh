@@ -11,6 +11,7 @@ PACKAGES=(
   pi-ext-boomerang
   pi-ext-intercom
   pi-ext-usage
+  pi-ext-cursor-sdk
   gmcli
 )
 WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/aur-ci.XXXXXX")"
