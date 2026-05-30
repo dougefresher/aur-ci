@@ -12,6 +12,7 @@ PACKAGES=(
   pi-ext-intercom
   pi-ext-usage
   pi-ext-cursor-sdk
+  pi-ext-web-access
   gmcli
 )
 WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/aur-ci.XXXXXX")"
